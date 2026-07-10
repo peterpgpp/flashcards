@@ -14,8 +14,8 @@
     --ink-text: #2b2a25;
     --mustard: #c99a3b;
     --mustard-light: #e0bd6e;
-    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", "Courier New", monospace;
-    --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --font-mono: "Times New Roman", Times, serif;
+    --font-serif: "Times New Roman", Times, serif;
   }
 
   *{ box-sizing: border-box; }
@@ -26,7 +26,7 @@
   }
 
   body{
-    background: radial-gradient(ellipse at top, var(--ink-2), var(--ink) 70%);
+    background: #002e1a;
     color: var(--paper);
     font-family: var(--font-serif);
     min-height: 100vh;
@@ -48,19 +48,9 @@
   .topbar{
     width: 100%;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: baseline;
     margin-bottom: clamp(20px, 5vh, 48px);
-  }
-
-  .brand{
-    font-family: var(--font-mono);
-    font-size: clamp(1rem, 3vw, 1.25rem);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--paper);
-    margin: 0;
   }
 
   .counter{
@@ -117,32 +107,10 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 20px 20px 20px 44px;
+    padding: 20px;
   }
 
   .card-back{ transform: rotateY(180deg); }
-
-  .margin-rule{
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 30px;
-    width: 2px;
-    background: var(--rule-red);
-    opacity: 0.75;
-  }
-
-  .lines-bg{
-    position: absolute;
-    inset: 0;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 27px,
-      rgba(90,80,60,0.14) 28px
-    );
-    pointer-events: none;
-  }
 
   .word{
     font-family: var(--font-mono);
@@ -151,12 +119,16 @@
     color: var(--ink-text);
     line-height: 1.15;
     word-break: break-word;
+    text-align: center;
+    width: 100%;
   }
 
   .tap-hint{
     position: absolute;
     bottom: 14px;
-    left: 44px;
+    left: 0;
+    width: 100%;
+    text-align: center;
     font-family: var(--font-mono);
     font-size: 0.7rem;
     letter-spacing: 0.08em;
@@ -228,14 +200,6 @@
   }
   #shuffleBtn:hover{ background: rgba(247,241,225,0.08); }
 
-  .hint-text{
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: rgba(247,241,225,0.4);
-    letter-spacing: 0.03em;
-    text-align: center;
-  }
-
   .empty-state{
     font-family: var(--font-mono);
     text-align: center;
@@ -246,9 +210,7 @@
   }
 
   @media (max-width: 380px){
-    .card-face{ padding: 16px 16px 16px 36px; }
-    .margin-rule{ left: 24px; }
-    .tap-hint{ left: 36px; }
+    .card-face{ padding: 16px; }
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -261,7 +223,6 @@
 
   <div class="desk">
     <div class="topbar">
-      <h1 class="brand">Word Cards</h1>
       <div class="counter" id="progress">— / —</div>
     </div>
 
@@ -271,13 +232,10 @@
       <div class="card-scene" id="cardScene">
         <div class="card" id="card">
           <div class="card-face card-front">
-            <div class="margin-rule"></div>
             <div class="word" id="wordText"></div>
             <div class="tap-hint">tap to flip</div>
           </div>
           <div class="card-face card-back">
-            <div class="margin-rule"></div>
-            <div class="lines-bg"></div>
             <div class="definition" id="defText"></div>
           </div>
         </div>
@@ -292,7 +250,6 @@
 
     <div class="controls-secondary">
       <button id="shuffleBtn" aria-label="Shuffle deck">🔀 Reshuffle</button>
-      <div class="hint-text">tap the card or press space to flip · arrow keys to move</div>
     </div>
 
     <div class="empty-state" id="emptyState" style="display:none;">
