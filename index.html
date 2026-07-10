@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Cards</title>
+<style>
+  :root{
+    --ink: #23252e;
+    --ink-2: #2d2f3a;
+    --paper: #f7f1e1;
+    --paper-dim: #ece4cd;
+    --rule-red: #b23a2e;
+    --ink-text: #2b2a25;
+    --mustard: #c99a3b;
+    --mustard-light: #e0bd6e;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", "Courier New", monospace;
+    --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    height: 100%;
+    margin: 0;
+  }
+
+  body{
+    background: radial-gradient(ellipse at top, var(--ink-2), var(--ink) 70%);
+    color: var(--paper);
+    font-family: var(--font-serif);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(16px, 4vw, 40px);
+  }
+
+  .desk{
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+
+  .topbar{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: clamp(20px, 5vh, 48px);
+  }
+
+  .brand{
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--paper);
+    margin: 0;
+  }
+
+  .counter{
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--mustard-light);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .stage{
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 5 / 3;
+    margin-bottom: clamp(20px, 5vh, 40px);
+  }
+
+  .stack-ghost{
+    position: absolute;
+    inset: 0;
+    background: var(--paper-dim);
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+  }
+  .stack-ghost.g1{ transform: rotate(-4deg) translate(-6px, 6px); opacity: 0.55; }
+  .stack-ghost.g2{ transform: rotate(3deg) translate(8px, 4px); opacity: 0.4; }
+
+  .card-scene{
+    position: absolute;
+    inset: 0;
+    perspective: 1800px;
+    cursor: pointer;
+  }
+
+  .card{
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(.4,.2,.2,1);
+  }
+  .card.flipped{ transform: rotateY(180deg); }
+
+  .card-face{
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: var(--paper);
+    border-radius: 14px;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.4);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px 20px 20px 44px;
+  }
+
+  .card-back{ transform: rotateY(180deg); }
+
+  .margin-rule{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 30px;
+    width: 2px;
+    background: var(--rule-red);
+    opacity: 0.75;
+  }
+
+  .lines-bg{
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 27px,
+      rgba(90,80,60,0.14) 28px
+    );
+    pointer-events: none;
+  }
+
+  .word{
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 6.5vw, 2.6rem);
+    color: var(--ink-text);
+    line-height: 1.15;
+    word-break: break-word;
+  }
+
+  .tap-hint{
+    position: absolute;
+    bottom: 14px;
+    left: 44px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-text);
+    opacity: 0.4;
+  }
+
+  .definition{
+    position: relative;
+    font-family: var(--font-serif);
+    font-size: clamp(1rem, 3.4vw, 1.25rem);
+    line-height: 28px;
+    color: var(--ink-text);
+    overflow-y: auto;
+    max-height: 100%;
+  }
+
+  .controls{
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  .controls-secondary{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  button{
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 20px;
+    cursor: pointer;
+    background: var(--paper);
+    color: var(--ink-text);
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  button:hover{ transform: translateY(-2px); }
+  button:active{ transform: translateY(0); }
+
+  button:focus-visible{
+    outline: 3px solid var(--mustard-light);
+    outline-offset: 2px;
+  }
+
+  #flipBtn{
+    background: var(--mustard);
+    color: var(--ink);
+  }
+  #flipBtn:hover{ background: var(--mustard-light); }
+
+  #shuffleBtn{
+    background: transparent;
+    color: var(--paper);
+    border: 1.5px solid rgba(247,241,225,0.35);
+    padding: 8px 16px;
+    font-size: 0.75rem;
+  }
+  #shuffleBtn:hover{ background: rgba(247,241,225,0.08); }
+
+  .hint-text{
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: rgba(247,241,225,0.4);
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
+
+  .empty-state{
+    font-family: var(--font-mono);
+    text-align: center;
+    color: var(--paper);
+    opacity: 0.7;
+    padding: 40px 20px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 380px){
+    .card-face{ padding: 16px 16px 16px 36px; }
+    .margin-rule{ left: 24px; }
+    .tap-hint{ left: 36px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{ transition: none; }
+    button{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="desk">
+    <div class="topbar">
+      <h1 class="brand">Word Cards</h1>
+      <div class="counter" id="progress">— / —</div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="stack-ghost g1"></div>
+      <div class="stack-ghost g2"></div>
+      <div class="card-scene" id="cardScene">
+        <div class="card" id="card">
+          <div class="card-face card-front">
+            <div class="margin-rule"></div>
+            <div class="word" id="wordText"></div>
+            <div class="tap-hint">tap to flip</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="margin-rule"></div>
+            <div class="lines-bg"></div>
+            <div class="definition" id="defText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="prevBtn" aria-label="Previous card">‹ Prev</button>
+      <button id="flipBtn" aria-label="Flip card">Flip</button>
+      <button id="nextBtn" aria-label="Next card">Next ›</button>
+    </div>
+
+    <div class="controls-secondary">
+      <button id="shuffleBtn" aria-label="Shuffle deck">🔀 Reshuffle</button>
+      <div class="hint-text">tap the card or press space to flip · arrow keys to move</div>
+    </div>
+
+    <div class="empty-state" id="emptyState" style="display:none;">
+      Your word list is empty.<br>
+      Open this file in a text editor and add words in the WORD LIST section near the top of the script.
+    </div>
+
+    <div aria-live="polite" class="sr-only" id="liveRegion" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);"></div>
+  </div>
+
+<script>
+/* ================================================================
+   YOUR WORD LIST — EDIT ME
+   ------------------------------------------------------------------
+   This is the only part of the file you need to touch to update
+   your vocabulary. Every entry follows this exact pattern:
+
+     { word: "Word", definition: "What it means." },
+
+   - Keep the curly braces { } around each entry.
+   - Keep the comma at the end of each line (including the last one
+     is fine too).
+   - Put your text between the double quotes.
+   - You can have as many entries as you like (a few hundred is no
+     problem at all).
+   - If a definition itself needs a double quote inside it, put a
+     backslash right before it, like \" so it doesn't break things.
+
+   To update monthly: delete everything between the [ and ] below,
+   or just add new lines, then save the file and re-upload it to
+   GitHub (or re-open it if you're running it locally).
+   ================================================================ */
+
+const wordList = [
+  { word: "Ephemeral", definition: "Lasting for a very short time; fleeting." },
+  { word: "Ubiquitous", definition: "Present, appearing, or found everywhere." },
+  { word: "Cogent", definition: "Clear, logical, and convincing." },
+  { word: "Serendipity", definition: "Finding something good without looking for it." },
+  { word: "Meticulous", definition: "Showing great attention to detail; very careful." },
+  { word: "Ambivalent", definition: "Having mixed or contradictory feelings about something." },
+  { word: "Precarious", definition: "Not securely held or in position; dangerously likely to fall." },
+  { word: "Resilient", definition: "Able to recover quickly from difficulties." },
+  { word: "Candid", definition: "Truthful and straightforward; frank." },
+  { word: "Nuanced", definition: "Characterized by subtle shades of meaning or expression." },
+  { word: "Pragmatic", definition: "Dealing with things sensibly and realistically." },
+  { word: "Tenacious", definition: "Holding firmly to a course of action; persistent." },
+];
+
+/* ================================================================
+   END OF WORD LIST
+   You shouldn't need to change anything below this line.
+   ================================================================ */
+
+const cardScene = document.getElementById('cardScene');
+const card = document.getElementById('card');
+const wordText = document.getElementById('wordText');
+const defText = document.getElementById('defText');
+const progress = document.getElementById('progress');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const flipBtn = document.getElementById('flipBtn');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const stage = document.getElementById('stage');
+const controls = document.querySelector('.controls');
+const controlsSecondary = document.querySelector('.controls-secondary');
+const emptyState = document.getElementById('emptyState');
+const liveRegion = document.getElementById('liveRegion');
+
+let deck = [];
+let index = 0;
+let flipped = false;
+
+// Fisher-Yates shuffle — gives a fresh random order every time it's called.
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function setFlipped(state){
+  flipped = state;
+  card.classList.toggle('flipped', flipped);
+}
+
+function render(){
+  if(deck.length === 0){
+    stage.style.display = 'none';
+    controls.style.display = 'none';
+    controlsSecondary.style.display = 'none';
+    progress.textContent = '';
+    emptyState.style.display = 'block';
+    return;
+  }
+  const item = deck[index];
+  wordText.textContent = item.word;
+  defText.textContent = item.definition;
+  progress.textContent = (index + 1) + ' / ' + deck.length;
+  liveRegion.textContent = item.word;
+}
+
+function goTo(newIndex){
+  if(deck.length === 0) return;
+  index = ((newIndex % deck.length) + deck.length) % deck.length; // wrap around both ends
+  setFlipped(false);
+  render();
+}
+
+function next(){ goTo(index + 1); }
+function prev(){ goTo(index - 1); }
+
+function toggleFlip(){
+  if(deck.length === 0) return;
+  setFlipped(!flipped);
+}
+
+function reshuffle(){
+  deck = shuffle(wordList);
+  index = 0;
+  setFlipped(false);
+  render();
+}
+
+// Click or tap the card itself to flip it.
+cardScene.addEventListener('click', toggleFlip);
+
+prevBtn.addEventListener('click', prev);
+nextBtn.addEventListener('click', next);
+flipBtn.addEventListener('click', toggleFlip);
+shuffleBtn.addEventListener('click', reshuffle);
+
+// Keyboard support: arrows to move, space/enter to flip.
+document.addEventListener('keydown', (e) => {
+  if(deck.length === 0) return;
+  if(e.key === 'ArrowRight'){ next(); }
+  else if(e.key === 'ArrowLeft'){ prev(); }
+  else if(e.key === ' ' || e.key === 'Enter'){
+    e.preventDefault();
+    toggleFlip();
+  }
+});
+
+// Basic swipe support for phones.
+let touchStartX = null;
+cardScene.addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].clientX;
+}, { passive: true });
+
+cardScene.addEventListener('touchend', (e) => {
+  if(touchStartX === null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const SWIPE_THRESHOLD = 40;
+  if(Math.abs(dx) > SWIPE_THRESHOLD){
+    if(dx < 0) next(); else prev();
+  }
+  touchStartX = null;
+}, { passive: true });
+
+// Shuffle fresh on every page load, so the order is different each time.
+deck = shuffle(wordList);
+render();
+</script>
+</body>
+</html>
